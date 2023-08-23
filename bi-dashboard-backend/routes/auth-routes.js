@@ -9,11 +9,19 @@ const User = require("../models/User");
 
 const smtpConfig = {
   service: 'Gmail',
+  from: 'sender',
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASSWORD
   }
 };
+
+const generateVerificationCode = () => {
+  const salt = bcrypt.genSaltSync(10);
+  const verificationCode = Math.floor(100000 + Math.random() * 900000); // genera un codigo random de 6 digitos
+  const verificationCodeHash = bcrypt.hashSync(verificationCode.toString(), salt); // genera el hash del codigo para guardar en la DB
+  return [verificationCode, verificationCodeHash];
+}
 
 const transporter = nodemailer.createTransport(smtpConfig)
 
@@ -36,9 +44,8 @@ authRouter.post("/signup", (req, res) => {
     })
   }
 
-  const verificationCode = Math.floor(100000 + Math.random() * 900000); // genera un codigo random de 6 digitos
-  const verificationCodeHash = bcrypt.hashSync(verificationCode.toString(), salt); // genera el hash del codigo para guardar en la DB
-  const mailBody = `Hello, ${req.body.name}! This is your verification code: ${verificationCode}`
+  const [verificationCode, verificationCodeHash] = generateVerificationCode()
+  const mailBody = `Hello, ${req.body.name}! This is your verification code: ${verificationCode}. Please enter it here to verify your email address.`
 
   transporter.sendMail({
     from: "sender",
@@ -106,7 +113,7 @@ authRouter.patch("/verify", (req, res) => {
       }, {
         verified: true
       }).then(user => {
-        
+
         if (!user) {
           return res.status(404).json({
             error: {},
@@ -132,6 +139,74 @@ authRouter.patch("/verify", (req, res) => {
     }
   })
 });
+
+authRouter.patch("/resend-verify", (req, res) => {
+  const {
+    email
+  } = req.body;
+  User.findOne({
+    email
+  }).then(user => {
+
+    if (!user) {
+      return res.status(404).json({
+        error: {},
+        message: "Incorrect email address"
+      });
+    }
+
+    if (user.verified) {
+      return res.status(400).json({
+        error: {},
+        message: "Your email is already verified."
+      })
+    }
+
+    const [verificationCode, verificationCodeHash] = generateVerificationCode()
+
+    const mailBody = `Hello, ${req.body.name}! This is your new verification code: ${verificationCode}. Please enter it here to verify your email address.`
+
+    transporter.sendMail({
+      from: "sender",
+      to: req.body.email,
+      subject: "Verify your email",
+      text: mailBody
+    })
+
+    User.findOneAndUpdate({
+      _id: user.id
+    }, {
+      verificationCode: verificationCodeHash
+    }).then(user => {
+
+      if (!user) {
+        return res.status(404).json({
+          error: {},
+          message: "Incorrect email address"
+        });
+      }
+
+      jwt.sign({
+          id: user._id
+        },
+        process.env.SECRET, {
+          expiresIn: 86400
+        },
+        (err, token) => {
+          delete user._doc.password;
+          res.status(200).json({
+            token,
+            user
+          });
+        }
+      );
+
+
+
+    })
+
+  })
+})
 
 authRouter.post("/login", (req, res) => {
   const {
