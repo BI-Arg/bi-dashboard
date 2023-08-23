@@ -12,7 +12,8 @@ const userSchema = new Schema({
   },
   location: {
     type: String,
-    enum: ['ar', 'cl', 'co', 'ec', 'pe', 'py', 'uy']
+    enum: ['ar', 'cl', 'co', 'ec', 'pe', 'py', 'uy'],
+    required: true
   },
   email: {
     type: String,
