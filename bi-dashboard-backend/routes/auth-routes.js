@@ -9,12 +9,21 @@ const User = require("../models/User");
 authRouter.post("/signup", (req, res) => {
   const salt = bcrypt.genSaltSync(10);
   const hashedPassword = bcrypt.hashSync(req.body.password, salt);
+  
   if(req.body.password.length < 8){
     return res.status(400).json({
       error: {},
       message: "Your password is not long enough."
     })
   };
+
+  if(!req.body.email.includes("@")){
+    return res.status(400).json({
+      error: {},
+      message: "Your email is not valid."
+    })
+  }
+
   User.create({ ...req.body, password: hashedPassword })
     .then(user => {
       req.user = user;

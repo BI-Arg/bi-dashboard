@@ -24,6 +24,10 @@ const userSchema = new Schema({
     type: String,
     required: true,
   },
+  verified: {
+    type: Boolean,
+    default: false
+  },
   role: {
     type: [String],
     enum: ['admin', 'user', 'gmar', 'gmec', 'gmuy', 'gmcl', 'gmpe', 'gmco', 'gmpy'],
