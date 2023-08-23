@@ -12,12 +12,8 @@ const userSchema = new Schema({
   },
   location: {
     type: String,
+    enum: ['ar', 'cl', 'co', 'ec', 'pe', 'py', 'uy']
   },
-  // username: {
-  //   type: String,
-  //   required: true,
-  //   unique: true
-  // },
   email: {
     type: String,
     required: true,
@@ -27,13 +23,9 @@ const userSchema = new Schema({
     type: String,
     required: true,
   },
-  // profilePicture: {
-  //   type: String,
-  //   default: "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png"
-  // },
   role: {
     type: [String],
-    enum: ['admin', 'user', 'gmar', 'gmuy', 'gmcl', 'gmpe', 'gmco'],
+    enum: ['admin', 'user', 'gmar', 'gmec', 'gmuy', 'gmcl', 'gmpe', 'gmco', 'gmpy'],
     default: 'user'
   }
 }, {

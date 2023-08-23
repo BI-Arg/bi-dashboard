@@ -8,13 +8,7 @@ const cors = require("cors");
 const path = require('path')
 
 const app = express();
-
-// middleware
-const corsOptions = {
-    origin: "http://localhost:3000" // frontend URI (ReactJS)
-}
 app.use(express.json());
-app.use(cors(corsOptions));
 
 // connect MongoDB
 mongoose.connect(process.env.MONGODB_URI, {
@@ -22,7 +16,6 @@ mongoose.connect(process.env.MONGODB_URI, {
 }).then(x => {
     const PORT = process.env.PORT || 8000
     app.listen(PORT, () => {
-        console.log("connections...", x.connections)
         console.log(`App with DB ${x.connections[0].name} is Listening on PORT ${PORT}`);
     })
 }).catch(err => {
